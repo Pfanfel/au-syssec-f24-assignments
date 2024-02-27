@@ -70,42 +70,106 @@ def oracle(iv, block, base_url):
 
 
 def single_block_attack_example(block, base_url):
-    """Returns the decryption of the given ciphertext block"""
+    """
+    Performs a single block attack on the given ciphertext block using a CBC padding oracle.
 
-    # zeroing_iv starts out nulled. each iteration of the main loop will add
-    # one byte to it, working from right to left, until it is fully populated,
-    # at which point it contains the result of DEC(ct_block)
+    Args:
+        block (bytes): The ciphertext block to decrypt.
+        base_url (str): The base URL of the padding oracle.
+
+    Returns:
+        bytes: The decrypted plaintext block.
+    """
+
+    # Initialize the zeroing IV as a list of zeros.
     zeroing_iv = [0] * BLOCK_SIZE
 
+    # Iterate over each padding value from 1 to BLOCK_SIZE.
     for pad_val in range(1, BLOCK_SIZE + 1):
-        padding_iv = [pad_val ^ b for b in zeroing_iv]
 
+        # Create a padding IV by XORing the pad value with each byte of the zeroing IV.
+        padding_iv = []
+        for b in zeroing_iv:
+            padding_iv.append(pad_val ^ b)
+
+        # Iterate over all possible byte values (0-255) as candidates.
         for candidate in range(256):
+
+            # Set the candidate byte at the appropriate position in the padding IV.
             padding_iv[-pad_val] = candidate
+
+            # Convert the padding IV to bytes to form the IV.
             iv = bytes(padding_iv)
+
+            # Check if the IV, combined with the given ciphertext block, is a valid padding.
             if oracle(iv, block, base_url):
+
+                # If the padding is valid, check if it's a false positive for pad_val = 1.
                 if pad_val == 1:
-                    # make sure the padding really is of length 1 by changing
-                    # the penultimate block and querying the oracle again
+
+                    # Modify the penultimate block by flipping a bit and check the padding again.
                     padding_iv[-2] ^= 1
                     iv = bytes(padding_iv)
+
+                    # If the modified padding is not valid, continue searching for the correct candidate.
                     if not oracle(iv, block, base_url):
-                        continue  # false positive; keep searching
+                        continue
+
+                # If the padding is valid and not a false positive, break the loop.
                 break
+
         else:
+            # If no valid padding byte is found, raise an exception.
             raise Exception(
-                "no valid padding byte found (is the oracle working correctly?)"
+                "No valid padding byte found (is the oracle working correctly?)"
             )
 
-        # print(f"candidate: {candidate}")
-        # print(f"pad_val: {pad_val}")
-
+        # Calculate the zeroing IV byte by XORing the candidate byte with the pad value.
         zeroing_iv[-pad_val] = candidate ^ pad_val
         print(
             f"{zeroing_iv[-pad_val]:>3} = {candidate:>3} ^ {pad_val:>2} -> zeroing_iv: {zeroing_iv}, "
         )
 
-    return zeroing_iv
+    return bytes(zeroing_iv)
+
+
+# def single_block_attack_example(block, base_url):
+#     """Returns the decryption of the given ciphertext block"""
+
+#     # zeroing_iv starts out nulled. each iteration of the main loop will add
+#     # one byte to it, working from right to left, until it is fully populated,
+#     # at which point it contains the result of DEC(ct_block)
+#     zeroing_iv = [0] * BLOCK_SIZE
+
+#     for pad_val in range(1, BLOCK_SIZE + 1):
+#         padding_iv = [pad_val ^ b for b in zeroing_iv]
+
+#         for candidate in range(256):
+#             padding_iv[-pad_val] = candidate
+#             iv = bytes(padding_iv)
+#             if oracle(iv, block, base_url):
+#                 if pad_val == 1:
+#                     # make sure the padding really is of length 1 by changing
+#                     # the penultimate block and querying the oracle again
+#                     padding_iv[-2] ^= 1
+#                     iv = bytes(padding_iv)
+#                     if not oracle(iv, block, base_url):
+#                         continue  # false positive; keep searching
+#                 break
+#         else:
+#             raise Exception(
+#                 "no valid padding byte found (is the oracle working correctly?)"
+#             )
+
+#         # print(f"candidate: {candidate}")
+#         # print(f"pad_val: {pad_val}")
+
+#         zeroing_iv[-pad_val] = candidate ^ pad_val
+#         print(
+#             f"{zeroing_iv[-pad_val]:>3} = {candidate:>3} ^ {pad_val:>2} -> zeroing_iv: {zeroing_iv}, "
+#         )
+
+#     return zeroing_iv
 
 
 def full_attack_example(iv, ct, base_url):
