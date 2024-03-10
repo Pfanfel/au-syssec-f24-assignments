@@ -8,6 +8,8 @@ The assignment has three parts, covering both constructive and destructive aspec
 
 For this part, you will need to have some familiarity with the IP protocol to write low-level networking code using a library. Suggestions are the `libnet/libpcap` library in the C programming language or the equivalent `socket` package in Python.
 
+We assume the following scenario: a whistleblower inside a network needs to transmit sensitive information to the outside, but without being detected by a draconian firewall. The firewall is configured to not allow much traffic to pass, but the system administrator has allowed some types of ICMP packets to go through because they can be used for debugging purposes. Our whistleblower has then decided to send non-standard ICMP packets containing encrypted data, in hope they can claim software error and plausibly deny the transmission in case they are detected.
+
 The objective of this task is to to implement an one-way encrypted covert channel using the [ICMP](https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol) (Internet Control Message Protocol) protocol.
 Communication is one-way to follow the typical use case of covert channels for _exfiltration_ of sensitive data.
 ICMP is an error-reporting protocol that network devices use to inform of error messages to the source IP address when network problems prevent an IP packet to be delivered.
@@ -19,9 +21,9 @@ You will implement client/server programs to exchange encrypted covert channel t
 
 For this part, you will need to have some familiarity with the TCP protocol to write low-level networking code using a library. Suggestions again are the `libnet/libpcap` library in the C programming language or the equivalent `Scapy` package in Python.
 
-The objective of this task is to slow down or interrupt TCP connections by forcing retransmission of packets. An illustrative example of such an approach is the `tcpnice` program in the `dsniff` package which reduces windows advertised to artificially decrease bandwidth. We will adopt two different approaches: send 3 ACK packets to simulate packet loss and force retransmission; send a TCP reset packet to drop the connection altogether.
+The objective of this task is to slow down or interrupt existing TCP connections by forcing retransmission of packets. An illustrative example of such an approach is the `tcpnice` program in the `dsniff` package which reduces windows advertised to artificially decrease bandwidth. We will adopt two different approaches: [send 3 duplicate ACK packets](https://datatracker.ietf.org/doc/html/rfc2581) to simulate packet loss and force retransmission; send a TCP reset packet to drop the connection altogether.
 
-You will implement a tool that receives a source and destination IP addresses to listen for TCP connections and what approach for throttling should be used. The tool should be executed in a third node with access to the traffic. Whenever such a packet is captured, RST or 3 ACK packets should be sent back to the origin and/or destination.
+You will implement a tool that receives a source and destination IP addresses to listen for TCP connections and what approach for throttling should be used. The tool should be executed in a third node with access to the traffic. Whenever such a packet is captured, RST or 3 duplicate ACK packets should be sent back to the origin and/or destination.
 For the experimental setup, you can try using virtual machines, or leveraging the VM used for practical exercises as a malicious node to interfere with connections between the host machine and another device.
 Collect experimental evidence of the malicious behavior through Wireshark, and screenshots of the time taken to transmit a file using a file transfer (FTP or SSH) to show that it is indeed slower or interrupted when under attack.
 
@@ -36,4 +38,4 @@ You are not supposed to write your own TLS/SSL implementation and a library shou
 
 ## Logistics:
 
-Your source code and binaries should be submitted through Brightspace, in groups of at most 3 students. Please including compile and usage instructions. The software package should be followed by a single short report (up to 5 pages, free format) describing your design decisions for the multiple parts and documenting the experimental evidence requested above. Deadline is 31/10/2022.
+Your source code and binaries should be submitted through Brightspace, in groups of at most 3 students. Please including compile and usage instructions. The software package should be followed by a single short report (up to 5 pages, free format) describing your design decisions for the multiple parts and documenting the experimental evidence requested above. Deadline is 05/04/2024.
