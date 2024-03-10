@@ -133,48 +133,9 @@ def single_block_attack_example(block, base_url):
     return bytes(zeroing_iv)
 
 
-# def single_block_attack_example(block, base_url):
-#     """Returns the decryption of the given ciphertext block"""
-
-#     # zeroing_iv starts out nulled. each iteration of the main loop will add
-#     # one byte to it, working from right to left, until it is fully populated,
-#     # at which point it contains the result of DEC(ct_block)
-#     zeroing_iv = [0] * BLOCK_SIZE
-
-#     for pad_val in range(1, BLOCK_SIZE + 1):
-#         padding_iv = [pad_val ^ b for b in zeroing_iv]
-
-#         for candidate in range(256):
-#             padding_iv[-pad_val] = candidate
-#             iv = bytes(padding_iv)
-#             if oracle(iv, block, base_url):
-#                 if pad_val == 1:
-#                     # make sure the padding really is of length 1 by changing
-#                     # the penultimate block and querying the oracle again
-#                     padding_iv[-2] ^= 1
-#                     iv = bytes(padding_iv)
-#                     if not oracle(iv, block, base_url):
-#                         continue  # false positive; keep searching
-#                 break
-#         else:
-#             raise Exception(
-#                 "no valid padding byte found (is the oracle working correctly?)"
-#             )
-
-#         # print(f"candidate: {candidate}")
-#         # print(f"pad_val: {pad_val}")
-
-#         zeroing_iv[-pad_val] = candidate ^ pad_val
-#         print(
-#             f"{zeroing_iv[-pad_val]:>3} = {candidate:>3} ^ {pad_val:>2} -> zeroing_iv: {zeroing_iv}, "
-#         )
-
-#     return zeroing_iv
-
 
 def full_attack_example(iv, ct, base_url):
     """Given the iv, ciphertext, and a padding oracle, finds and returns the plaintext"""
-    # assert len(iv) == BLOCK_SIZE and len(ct) % BLOCK_SIZE == 0
 
     msg = iv + ct
     blocks = []
@@ -190,7 +151,6 @@ def full_attack_example(iv, ct, base_url):
         print(f"ct: {ct}")
         zeroing_iv_block = single_block_attack_example(ct, base_url)
         zeroing_iv_blocks.append(zeroing_iv_block)
-        # pt = bytes(iv_byte ^ zeroing_iv_block_byte for iv_byte, zeroing_iv_block_byte in zip(iv, zeroing_iv_block))
         print(f"zeroing_iv_blocks: {zeroing_iv_blocks}")
         plain_text_block = xor_block(iv, zeroing_iv_block)
         result += plain_text_block
@@ -226,9 +186,9 @@ def CBC_R_encryption(plaintext, base_url):
         raise ValueError("Plaintext length must be a multiple of the block size.")
 
     # Divide the plaintext into blocks of b bytes
-    plaintext_blocks = [
-        plaintext[i : i + BLOCK_SIZE] for i in range(0, len(plaintext), BLOCK_SIZE)
-    ]
+    plaintext_blocks = []
+    for i in range(0, len(plaintext), BLOCK_SIZE):
+        plaintext_blocks.append(plaintext[i : i + BLOCK_SIZE])
     N = len(plaintext_blocks)
 
     # Choose a few random bytes for the initial ciphertext block
