@@ -2,29 +2,34 @@ import os
 import sys
 from scapy.all import IP, ICMP, sr1, sniff
 from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad, unpad
 from Crypto.Random import get_random_bytes
 from binascii import hexlify, unhexlify
 import argparse
+import pickle
 
 
-# from scapy.all import IP, ICMP, sr, sr1
+KEY_LENGTH_BYTES = 32  # 256 bits
+NONCE_LENGTH_BYTES = 16  # 128 bits
 
-
-# Encryption and decryption functions
-key = get_random_bytes(16)
+# key = get_random_bytes(KEY_LENGTH_BYTES)
+key = b"\xad\xf6\x86y\x9b\xcaC9\x16\xc8\xc8\x96*\x9bw\x1d\x8eo\xe3\xbdDl\xc0\x96\x93\xe29\xd2\xe4\xd5\x0e\x18"
 print("Key: ", key)
 
 
+# Encryption and decryption functions
 def encrypt_data(data):
-    cipher = AES.new(key, AES.MODE_GCM)
+    # iv = get_random_bytes(IV_LENGTH)
+    nonce = get_random_bytes(NONCE_LENGTH_BYTES)
+    cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
     nonce = cipher.nonce
     ciphertext, tag = cipher.encrypt_and_digest(data.encode())
     return (nonce, ciphertext, tag)
 
 
 def decrypt_data(nonce, ciphertext, tag):
+    # 1. create an AES object in GCM mode and pass the nonce
     cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
+    # 2. decrypt the ciphertext and verify the authentication tag
     plaintext = cipher.decrypt_and_verify(ciphertext, tag)
     return plaintext.decode()
 
@@ -36,11 +41,18 @@ def client_program(dest_ip):
         # encrypted_data = encrypt_data(data)
         # print("Encrypted data: ", encrypted_data)
         # print("type: ", type(encrypted_data))
+        # Create a data object with the nonce, ciphertext, and tag
+        nonce, ciphertext, tag = encrypt_data(data)
+        print("Nonce: ", nonce)
+        print("Ciphertext: ", ciphertext)
+        print("Tag: ", tag)
+        data = {nonce: nonce, ciphertext: ciphertext, tag: tag}
+        pickeled_data = pickle.dumps(data)
         print("data: ", data)
         print("type: ", type(data))
         print("Sending ICMP message...")
 
-        sr1(IP(dst=dest_ip) / ICMP(type=47) / data, timeout=2, verbose=True)
+        sr1(IP(dst=dest_ip) / ICMP(type=47) / pickeled_data, timeout=2, verbose=True)
 
 
 # Server program
@@ -50,9 +62,19 @@ def icmp_filter(pkt):
 
 def server_program():
     print("Listening for ICMP messages...")
+
+    def handle_icmp_packet(pkt):
+        pickeled_data = pkt[ICMP].load
+        data = pickle.loads(pickeled_data)
+        print("Received ICMP message...")
+        print("Data: ", data)
+        decrypted_data = decrypt_data(data["nonce"], data["ciphertext"], data["tag"])
+        print("Decrypted data: ", decrypted_data)
+        # print(decrypt_data(pkt[ICMP].load))
+
     sniff(
         filter="icmp",
-        prn=lambda pkt: print(decrypt_data(pkt[ICMP].load)),
+        prn=handle_icmp_packet,
         lfilter=icmp_filter,
     )
 
