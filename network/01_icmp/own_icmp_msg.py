@@ -1,17 +1,14 @@
 import os
-
-print(os.sys.path)
-os.sys.path.append("./.venv/lib/python3.10/site-packages")
-
 import sys
 from scapy.all import IP, ICMP, sr1, sniff
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 from Crypto.Random import get_random_bytes
 from binascii import hexlify, unhexlify
+import argparse
 
 
-from scapy.all import IP, ICMP, sr, sr1
+# from scapy.all import IP, ICMP, sr, sr1
 
 
 # Encryption and decryption functions
@@ -60,12 +57,27 @@ def server_program():
     )
 
 
-if __name__ == "__main__":
-    if len(sys.argv) != 3 or sys.argv[1] not in ["client", "server"]:
-        print("Usage: python program.py [client|server] [destination_ip]")
-        sys.exit(1)
+# Argparse parses the command line arguments passed to the program
+# Option 1: python program.py client [destination_ip]
+# Option 2: python program.py server
 
-    if sys.argv[1] == "client":
-        client_program(sys.argv[2])
-    else:
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="ICMP Client/Server message program")
+    parser.add_argument(
+        "mode", choices=["client", "server"], help="Program mode: client or server"
+    )
+    parser.add_argument(
+        "destination_ip",
+        nargs="?",
+        help="Destination IP address (required for client mode)",
+    )
+    args = parser.parse_args()
+
+    if args.mode == "client":
+        if not args.destination_ip:
+            parser.error("Destination IP address is required for client mode")
+        client_program(args.destination_ip)
+    elif args.mode == "server":
         server_program()
+    else:
+        parser.error("Invalid mode")
