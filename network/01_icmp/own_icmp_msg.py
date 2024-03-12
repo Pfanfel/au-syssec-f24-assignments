@@ -40,9 +40,9 @@ def client_program(dest_ip):
         nonce, ciphertext, tag = encrypt_data(input_data)
         data_to_send = (nonce, ciphertext, tag)
         pickeled_data = pickle.dumps(data_to_send)
-        print("Sending ICMP message...")
+        # print("Sending ICMP message...")
 
-        sr1(IP(dst=dest_ip) / ICMP(type=47) / pickeled_data, timeout=2, verbose=True)
+        sr1(IP(dst=dest_ip) / ICMP(type=47) / pickeled_data, timeout=0, verbose=False)
 
 
 # Server program
@@ -54,15 +54,15 @@ def server_program():
     print("Listening for ICMP messages...")
 
     def handle_icmp_packet(pkt):
+        print(pkt.summary())
         print("Received ICMP message...")
         pickeled_data = pkt[ICMP].load
         unpickeled_data = pickle.loads(pickeled_data)
-        print(type(unpickeled_data))
         nonce = unpickeled_data[0]
         data = unpickeled_data[1]
         tag = unpickeled_data[2]
         decrypted_data = decrypt_data(nonce, data, tag)
-        print("Decrypted data: ", decrypted_data)
+        print("Recived: ", decrypted_data)
         # print(decrypt_data(pkt[ICMP].load))
 
     sniff(
