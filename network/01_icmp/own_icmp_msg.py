@@ -54,16 +54,16 @@ def server_program():
     print("Listening for ICMP messages...")
 
     def handle_icmp_packet(pkt):
-        print(pkt.summary())
-        print("Received ICMP message...")
+        #print(f"Received ICMP message: {pkt.show()}")
         pickeled_data = pkt[ICMP].load
         unpickeled_data = pickle.loads(pickeled_data)
         nonce = unpickeled_data[0]
         data = unpickeled_data[1]
         tag = unpickeled_data[2]
         decrypted_data = decrypt_data(nonce, data, tag)
-        print("Recived: ", decrypted_data)
-        # print(decrypt_data(pkt[ICMP].load))
+        ip_src = pkt[IP].src
+        ip_dst = pkt[IP].dst
+        print(f"{ip_src} -> {ip_dst}: {decrypted_data}")
 
     sniff(
         filter="icmp",
