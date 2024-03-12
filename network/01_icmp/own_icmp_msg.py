@@ -37,19 +37,13 @@ def decrypt_data(nonce, ciphertext, tag):
 # Client program
 def client_program(dest_ip):
     while True:
-        data = input("Enter data to send: ")
-        # encrypted_data = encrypt_data(data)
-        # print("Encrypted data: ", encrypted_data)
-        # print("type: ", type(encrypted_data))
-        # Create a data object with the nonce, ciphertext, and tag
-        nonce, ciphertext, tag = encrypt_data(data)
+        input_data = input("Enter data to send: ")
+        nonce, ciphertext, tag = encrypt_data(input_data)
         print("Nonce: ", nonce)
         print("Ciphertext: ", ciphertext)
         print("Tag: ", tag)
-        data = {nonce: nonce, ciphertext: ciphertext, tag: tag}
-        pickeled_data = pickle.dumps(data)
-        print("data: ", data)
-        print("type: ", type(data))
+        data_to_send = (nonce, ciphertext, tag)
+        pickeled_data = pickle.dumps(data_to_send)
         print("Sending ICMP message...")
 
         sr1(IP(dst=dest_ip) / ICMP(type=47) / pickeled_data, timeout=2, verbose=True)
@@ -64,18 +58,15 @@ def server_program():
     print("Listening for ICMP messages...")
 
     def handle_icmp_packet(pkt):
+        print("Received ICMP message...")
         pickeled_data = pkt[ICMP].load
         unpickeled_data = pickle.loads(pickeled_data)
-        print("Received ICMP message...")
-        print("unpickeled_data: ", unpickeled_data)
-        keys_unpickeled_data = unpickeled_data.keys()
-        print("keys_unpickeled_data: ", keys_unpickeled_data)
-        print(keys_unpickeled_data[0])
-        print(keys_unpickeled_data[1])
-        print(keys_unpickeled_data[2])
-        nonce = data[keys_unpickeled_data[0]]
-        data = data[keys_unpickeled_data[1]]
-        tag = data[keys_unpickeled_data[2]]
+        print(type(unpickeled_data))
+        nonce = unpickeled_data[0]
+        data = unpickeled_data[1]
+        tag = unpickeled_data[2]
+        print("Nonce: ", nonce)
+        print("tag: ", tag)
         decrypted_data = decrypt_data(nonce, data, tag)
         print("Decrypted data: ", decrypted_data)
         # print(decrypt_data(pkt[ICMP].load))
