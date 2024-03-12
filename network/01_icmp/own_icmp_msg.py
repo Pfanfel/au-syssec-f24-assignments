@@ -65,10 +65,18 @@ def server_program():
 
     def handle_icmp_packet(pkt):
         pickeled_data = pkt[ICMP].load
-        data = pickle.loads(pickeled_data)
+        unpickeled_data = pickle.loads(pickeled_data)
         print("Received ICMP message...")
-        print("Data: ", data)
-        decrypted_data = decrypt_data(data["nonce"], data["ciphertext"], data["tag"])
+        print("unpickeled_data: ", unpickeled_data)
+        keys_unpickeled_data = unpickeled_data.keys()
+        print("keys_unpickeled_data: ", keys_unpickeled_data)
+        print(keys_unpickeled_data[0])
+        print(keys_unpickeled_data[1])
+        print(keys_unpickeled_data[2])
+        nonce = data[keys_unpickeled_data[0]]
+        data = data[keys_unpickeled_data[1]]
+        tag = data[keys_unpickeled_data[2]]
+        decrypted_data = decrypt_data(nonce, data, tag)
         print("Decrypted data: ", decrypted_data)
         # print(decrypt_data(pkt[ICMP].load))
 
