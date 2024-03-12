@@ -13,7 +13,6 @@ NONCE_LENGTH_BYTES = 16  # 128 bits
 
 # key = get_random_bytes(KEY_LENGTH_BYTES)
 key = b"\xad\xf6\x86y\x9b\xcaC9\x16\xc8\xc8\x96*\x9bw\x1d\x8eo\xe3\xbdDl\xc0\x96\x93\xe29\xd2\xe4\xd5\x0e\x18"
-print("Key: ", key)
 
 
 # Encryption and decryption functions
@@ -39,9 +38,6 @@ def client_program(dest_ip):
     while True:
         input_data = input("Enter data to send: ")
         nonce, ciphertext, tag = encrypt_data(input_data)
-        print("Nonce: ", nonce)
-        print("Ciphertext: ", ciphertext)
-        print("Tag: ", tag)
         data_to_send = (nonce, ciphertext, tag)
         pickeled_data = pickle.dumps(data_to_send)
         print("Sending ICMP message...")
@@ -65,8 +61,6 @@ def server_program():
         nonce = unpickeled_data[0]
         data = unpickeled_data[1]
         tag = unpickeled_data[2]
-        print("Nonce: ", nonce)
-        print("tag: ", tag)
         decrypted_data = decrypt_data(nonce, data, tag)
         print("Decrypted data: ", decrypted_data)
         # print(decrypt_data(pkt[ICMP].load))
