@@ -1,7 +1,6 @@
 import argparse
 import pickle
-
-from scapy.all import IP, ICMP, sniff, sendp
+from scapy.all import IP, ICMP, sniff, send
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 
@@ -15,7 +14,6 @@ key = b"\xad\xf6\x86y\x9b\xcaC9\x16\xc8\xc8\x96*\x9bw\x1d\x8eo\xe3\xbdDl\xc0\x96
 
 # Encryption and decryption functions
 def encrypt_data(data):
-    # iv = get_random_bytes(IV_LENGTH)
     nonce = get_random_bytes(NONCE_LENGTH_BYTES)
     cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
     nonce = cipher.nonce
@@ -39,8 +37,7 @@ def client_program(dest_ip):
         data_to_send = (nonce, ciphertext, tag)
         pickeled_data = pickle.dumps(data_to_send)
         # print("Sending ICMP message...")
-
-        sendp(IP(dst=dest_ip) / ICMP(type=47) / pickeled_data, timeout=0, verbose=False)
+        send(IP(dst=dest_ip) / ICMP(type=47) / pickeled_data, verbose=False)
 
 
 # Server program
