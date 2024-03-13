@@ -16,7 +16,6 @@ key = b"\xad\xf6\x86y\x9b\xcaC9\x16\xc8\xc8\x96*\x9bw\x1d\x8eo\xe3\xbdDl\xc0\x96
 def encrypt_data(data):
     nonce = get_random_bytes(NONCE_LENGTH_BYTES)
     cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
-    nonce = cipher.nonce
     ciphertext, tag = cipher.encrypt_and_digest(data.encode())
     return (nonce, ciphertext, tag)
 
