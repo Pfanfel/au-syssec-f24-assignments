@@ -1,11 +1,9 @@
-import os
-import sys
-from scapy.all import IP, ICMP, sr1, sniff
-from Crypto.Cipher import AES
-from Crypto.Random import get_random_bytes
-from binascii import hexlify, unhexlify
 import argparse
 import pickle
+
+from scapy.all import IP, ICMP, sniff, sendp
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
 
 
 KEY_LENGTH_BYTES = 32  # 256 bits
@@ -42,7 +40,7 @@ def client_program(dest_ip):
         pickeled_data = pickle.dumps(data_to_send)
         # print("Sending ICMP message...")
 
-        sr1(IP(dst=dest_ip) / ICMP(type=47) / pickeled_data, timeout=0, verbose=False)
+        sendp(IP(dst=dest_ip) / ICMP(type=47) / pickeled_data, timeout=0, verbose=False)
 
 
 # Server program
@@ -54,7 +52,7 @@ def server_program():
     print("Listening for ICMP messages...")
 
     def handle_icmp_packet(pkt):
-        #print(f"Received ICMP message: {pkt.show()}")
+        # print(f"Received ICMP message: {pkt.show()}")
         pickeled_data = pkt[ICMP].load
         unpickeled_data = pickle.loads(pickeled_data)
         nonce = unpickeled_data[0]
