@@ -1,9 +1,4 @@
 # Task 02
-# TODO 
-#   be able to interrupt the connection (ssh) bt src and dst
-#       send a package with RST flag to dst?
-#   be able to slow down the connection bt src and dst
-#       sniff pkt from src to dst and resend it with same ack number?
 
 # imports
 import scapy.all as sc
@@ -62,7 +57,6 @@ def Throttling_TCP(src_ip, dst_ip, interrupt=True):
     if interrupt:
         interrupt_connection()
     else:
-
         throttle_connection()
 
 
